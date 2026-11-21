@@ -89,6 +89,16 @@ for manifest in "$here/manifests/"*.yaml; do
 done
 yoke unit restart online-accounts --instance "$instance" > /dev/null
 yoke unit restart calendar --instance "$instance" > /dev/null
+# An argument the unit refuses makes it exit at every start: say why, rather than follow a unit that never runs.
+for _ in $(seq 1 20); do
+  state="$(yoke core read unit calendar --instance "$instance" | grep -m1 '"state"' | tr -d ' ",' | cut -d: -f2)"
+  [[ "$state" == Running ]] && break
+  if [[ "$state" == Failed ]]; then
+    echo "run.sh: calendar does not start: $(yoke log query --unit calendar --instance "$instance" | grep -v unit.state.changed | tail -n 1 | cut -d' ' -f4-)" >&2
+    exit 2
+  fi
+  sleep 0.5
+done
 # calendar starts after the unit its need is bound to; it holds its grants once a question it was granted is
 # answered, and not before: the incarnation admitted before the grants refuses it.
 for _ in $(seq 1 60); do
