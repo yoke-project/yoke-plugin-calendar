@@ -89,7 +89,12 @@ for manifest in "$here/manifests/"*.yaml; do
 done
 yoke unit restart online-accounts --instance "$instance" > /dev/null
 yoke unit restart calendar --instance "$instance" > /dev/null
-sleep 2
+# calendar starts after the unit its need is bound to; it holds its grants once a question it was granted is
+# answered, and not before: the incarnation admitted before the grants refuses it.
+for _ in $(seq 1 60); do
+  yoke unit ask calendar calendar.sources --instance "$instance" > /dev/null 2>&1 && break
+  sleep 0.5
+done
 echo "run.sh: $instance runs; with: XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR XDG_STATE_HOME=$XDG_STATE_HOME XDG_CONFIG_HOME=$XDG_CONFIG_HOME yoke unit ask calendar calendar.days --instance $instance" >&2
 "$here/follow/target/release/follow" --instance "$instance" --channel panel --unit calendar \
   --stream calendar.upcoming --ask calendar.sources "${follow_args[@]}"
