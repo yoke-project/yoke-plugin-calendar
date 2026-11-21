@@ -1,0 +1,9 @@
+plugin: 1
+id: com.yoke.calendar
+language: rust
+program: calendar
+manifest: plugin/com.yoke.calendar.yaml
+build:
+  in: plugin/
+  run: cargo build --release --target "$YOKE_RUST_TARGET" && cp "target/$YOKE_RUST_TARGET/release/calendar" "$YOKE_OUT/calendar"
+architectures: [x86_64, aarch64]

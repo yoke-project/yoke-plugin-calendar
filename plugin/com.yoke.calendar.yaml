@@ -1,0 +1,50 @@
+manifest: 1
+id: com.yoke.calendar
+protocol: 1
+needs:
+  - secret:credentials
+  - storage:cache
+  - unit:accounts
+streams:
+  - id: calendar.upcoming
+    tolerates_loss: true
+commands:
+  - id: calendar.refresh
+queries:
+  - id: calendar.sources
+  - id: calendar.events
+  - id: calendar.days
+occurrences:
+  - id: calendar.event.starting
+  - id: calendar.source.failed
+uses:
+  accounts:
+    questions:
+      - oauth.token
+capabilities:
+  - name: query.calendar.sources.answer
+    governs:
+      query: calendar.sources
+  - name: query.calendar.events.answer
+    governs:
+      query: calendar.events
+  - name: query.calendar.days.answer
+    governs:
+      query: calendar.days
+  - name: command.calendar.refresh.accept
+    governs:
+      command: calendar.refresh
+  - name: stream.calendar.upcoming.publish
+    governs:
+      stream: calendar.upcoming
+  - name: event.calendar.event.starting.report
+    governs:
+      occurrence: calendar.event.starting
+  - name: event.calendar.source.failed.report
+    governs:
+      occurrence: calendar.source.failed
+  - name: query.oauth.token.ask
+    governs:
+      use:
+        need: accounts
+        query: oauth.token

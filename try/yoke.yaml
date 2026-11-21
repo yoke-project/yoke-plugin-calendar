@@ -1,0 +1,24 @@
+model: 1
+id: com.yoke.calendar-try
+version: 0.1.0
+arch: x86_64
+core: ">=0.17.0"
+channels:
+  panel:
+    transport: local
+    clients: single
+units:
+  online-accounts:
+    kind: plugin
+    plugin: com.yoke.online-accounts
+    exec: components/plugins/online-accounts
+    args: ["--clients", "${bind.clients}", "--tokens", "${bind.tokens}"]
+    digest: sha256:0ac293be9c54e287c04ac1120348078fc99d082d863f9e04ceac28ffb547aec2
+  calendar:
+    kind: plugin
+    plugin: com.yoke.calendar
+    exec: components/plugins/calendar
+    args: ["--credentials", "${bind.credentials}", "--cache", "${bind.cache}", "--accounts", "${bind.accounts}"]
+    digest: sha256:bd2803a9a3421598e1a69e2914010044d7c168226cf0eb091d6b5e225a01d13c
+    bind:
+      accounts: online-accounts

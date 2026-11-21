@@ -1,0 +1,17 @@
+plugins:
+  - id: com.yoke.online-accounts
+    unit: online-accounts
+    source: ../../yoke-plugin-online-accounts
+    tag: null
+    commit: aeed7940a71805a832450cb4cadb7c44f1378822
+    clean: false
+    arch: x86_64
+    digest: sha256:0ac293be9c54e287c04ac1120348078fc99d082d863f9e04ceac28ffb547aec2
+    taken: 2026-11-21T17:06:24Z
+  - id: com.yoke.calendar
+    unit: calendar
+    source: ..
+    tag: null
+    arch: x86_64
+    digest: sha256:bd2803a9a3421598e1a69e2914010044d7c168226cf0eb091d6b5e225a01d13c
+    taken: 2026-11-21T17:06:58Z
