@@ -11,7 +11,7 @@ set -uo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 results="${1:-$root/.results}"
-mkdir -p "$results"
+mkdir -p "$results" && results="$(cd "$results" && pwd)" # absolute: the script moves into try/
 date -u +%Y-%m-%dT%H:%M:%SZ > "$results/started"
 CASE=yoke-plugin-calendar:the-watch.01
 
