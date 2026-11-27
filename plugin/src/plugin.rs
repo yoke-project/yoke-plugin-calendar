@@ -363,6 +363,9 @@ pub struct Calendar {
     /// What the stream last carried, to tell a change.
     shown: Mutex<Value>,
     sequence: AtomicU64,
+    /// Raised whenever a read changes the occurrences a source holds, so that a client showing more than
+    /// the stream carries — a month of `calendar.days` — knows when to ask again.
+    revision: AtomicU64,
     emitted: AtomicU64,
     flows: AtomicBool,
     publishing: tokio::sync::Mutex<()>,
@@ -430,6 +433,7 @@ impl Calendar {
             reported: Mutex::new(BTreeMap::new()),
             shown: Mutex::new(Value::Null),
             sequence: AtomicU64::new(1),
+            revision: AtomicU64::new(0),
             emitted: AtomicU64::new(0),
             flows: AtomicBool::new(false),
             publishing: tokio::sync::Mutex::new(()),
@@ -490,6 +494,9 @@ impl Calendar {
                             None => None,
                         };
                         h.line = keeping.and_then(|k| self.cache.keep(&source.id, now, &k).err());
+                        if h.events != r.events || h.expanded != r.expanded {
+                            self.revision.fetch_add(1, Ordering::Relaxed);
+                        }
                         h.events = r.events;
                         h.expanded = r.expanded;
                         h.unread = r.unread;
@@ -726,6 +733,7 @@ impl Calendar {
         let content = json!({
             "now": on.iter().map(|o| event_json(o, self.zone)).collect::<Vec<_>>(),
             "next": next.iter().map(|o| event_json(o, self.zone)).collect::<Vec<_>>(),
+            "revision": self.revision.load(Ordering::Relaxed),
         });
         {
             let mut shown = self.shown.lock().unwrap();
@@ -774,6 +782,7 @@ impl Calendar {
             "zone": self.zone.name(),
             "now": shown.get("now").cloned().unwrap_or(json!([])),
             "next": shown.get("next").cloned().unwrap_or(json!([])),
+            "revision": shown.get("revision").cloned().unwrap_or(json!(0)),
         })
     }
 

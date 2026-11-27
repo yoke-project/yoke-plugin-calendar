@@ -9,7 +9,7 @@ what a day holds — for a meeting-room panel, a reception display, a kiosk or a
 | --- | --- |
 | questions | `calendar.sources` `{}` (every source and where it stands), `calendar.events` `{from?, to?, sources?}` (the occurrences in a window), `calendar.days` `{from?, days?, sources?}` (the same by day) |
 | commands | `calendar.refresh` `{source?}` |
-| streams | `calendar.upcoming`: what is on now and what is next, again at every change |
+| streams | `calendar.upcoming`: what is on now and what is next, again at every change, with a `revision` raised whenever a read changes what a source holds, so that a client showing more — a month of `calendar.days` — asks again then and not on a clock |
 | occurrences | `calendar.event.starting` (10), `calendar.source.failed` (30) |
 | needs | `secret:credentials`, `storage:cache`, `unit:accounts` — the last bound to an `online-accounts` unit |
 

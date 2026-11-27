@@ -727,3 +727,46 @@ async fn a_source_through_accounts_with_none_bound_is_said_so() {
     let line = ask(&b.calendar, SOURCES, json!({})).unwrap()["sources"][0]["line"].clone();
     assert!(line.as_str().unwrap().contains("not bound"), "{line}");
 }
+
+#[tokio::test]
+async fn a_change_beyond_what_the_stream_carries_raises_its_revision() {
+    let later = |title: &str| {
+        let at = Utc::now() + chrono::Duration::days(30);
+        cal(&format!(
+            "BEGIN:VEVENT\r\nUID:far\r\nSUMMARY:{title}\r\nDTSTART:{}\r\nDURATION:PT1H\r\nEND:VEVENT\r\n",
+            at.format("%Y%m%dT%H%M%SZ")
+        ))
+    };
+    let text = Arc::new(Mutex::new(later("Far")));
+    let serving = text.clone();
+    let mut b = bench(
+        &["s=ics:https://x/c.ics"],
+        BTreeMap::new(),
+        scratch("revision"),
+        Box::new(move |_| ok(&serving.lock().unwrap())),
+    );
+    b.calendar.refresh(None).await.unwrap();
+    let first = b.calendar.record();
+    assert!(
+        first["next"].as_array().unwrap().is_empty(),
+        "the event is beyond the horizon"
+    );
+    while b.happened.try_recv().is_ok() {}
+
+    *text.lock().unwrap() = later("Moved");
+    b.calendar.refresh(None).await.unwrap();
+    let second = b.calendar.record();
+    assert!(
+        second["revision"].as_u64() > first["revision"].as_u64(),
+        "{second}"
+    );
+    assert_ne!(second["sequence"], first["sequence"]);
+    assert!(std::iter::from_fn(|| b.happened.try_recv().ok()).any(|h| h == Happened::Changed));
+
+    b.calendar.refresh(None).await.unwrap();
+    assert_eq!(
+        b.calendar.record()["revision"],
+        second["revision"],
+        "a read that changes nothing"
+    );
+}
